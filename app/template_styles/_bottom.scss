@@ -1,0 +1,22 @@
+#bottom {
+    margin-bottom: 4em;
+
+    .content{
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        height: 100%;
+
+        .center {
+            display: flex;
+            flex-direction: row;
+            width: 30em;
+            height: 30em;
+            margin: 2em auto 0 auto;
+
+            #npi {
+                flex-grow: 1;
+            }
+        }
+    }
+}

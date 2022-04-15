@@ -1,0 +1,29 @@
+#middle {
+    height: 30em;
+    margin-bottom: 4em;
+
+    .content{
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        height: 100%;
+
+        .panel {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+            margin-top: 2em;
+        
+            .left {
+                display: inline-block;
+                margin: 0 2em 0 0;
+                flex-grow: 1.5;
+            }
+            .right {
+                display: inline-block;
+                flex-grow: 1;
+            }
+        }
+    }
+}

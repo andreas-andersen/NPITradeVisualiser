@@ -1,20 +1,50 @@
-library(ComtradeDatabaseDownloader)
+#### DEPENDENCIES
 
-# Comtrade trade data
+## Check if required packages are available
+
+if (!("ComtradeDatabaseDownloader" %in% rownames(installed.packages()))) {
+  if (!("devtools" %in% rownames(installed.packages()))) {
+    install.packages("devtools")
+  }
+  library(devtools)
+  install_github("andreas-andersen/ComtradeDatabaseDownloader")
+}
+
+library(ComtradeDatabaseDownloader)
+library(dotenv)
+
+## Load local "api.env" if available store the Comtrade token here
+## Input "?get_comtrade" for details on what a Comtrade token is
+
+if (file.exists("api.env")) {
+  load_dot_env("api.env")
+}
+
+
+
+#### GET FILES
+
+## Get Comtrade trade data
+
 get_comtrade(
   "annual", startyear = 2019, endyear = 2021, 
-  token = "8K+Ux0yKc/xsg/fbofljZijFtTTVVK64UZDHgh+jXGlp5q27ZPNQFpqq8xJG8s8SEHr2Ui0rR06ZwyEcUbGdPCU2O3H3Vtn+i3qLTAXrA8otLpf9Af/MqsuB7oVoH+e9B9qAOi5HqfzfazeqjzGBB7B1AqkeHSckOisESJ7XESM=", 
-  savedir = "D:/Google Drive/2.Study/ECON4091 (Master's Thesis)/ShinyApp/data",
+  token = Sys.getenv("COMTRADE_TOKEN"), 
+  savedir = "data",
   int64 = FALSE
 )
 
-# OxCGRT
-url_oxcgrt <- "https://github.com/OxCGRT/covid-policy-tracker/blob/master/data/timeseries/stringency_index.csv?raw=true"
+## Get OxCGRT data
+
+url_oxcgrt <- {
+  paste0("https://github.com/OxCGRT/covid-policy-tracker/blob/master/data/",
+  "timeseries/stringency_index.csv?raw=true")
+}
 download.file(url = url_oxcgrt, "data/npi.csv")
 
-# Map data
+## Get spatial map data
+
 f <- "data/map"
-dir.create(f)
+dir.create(f, showWarnings = FALSE)
 url_map <- "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip"
 download.file(url = url_map , destfile = file.path(f, "world.zip"))
 unzip(file.path(f, "world.zip"), exdir = f)

@@ -93,7 +93,7 @@ h3 {
 }
 
 .sidemargin .content {
-  max-width: 80rem;
+  max-width: 75rem;
   margin: 0 auto;
 }
 
@@ -115,13 +115,7 @@ h3 {
   background-color: #F9F9F9;
 }
 
-#top #map {
-  height: 40em;
-  width: 100%;
-}
-
 #middle {
-  height: 30em;
   margin-bottom: 4em;
 }
 
@@ -147,6 +141,9 @@ h3 {
   -webkit-box-direction: normal;
       -ms-flex-direction: row;
           flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   width: 100%;
   height: 100%;
   margin-top: 2em;
@@ -155,16 +152,22 @@ h3 {
 #middle .content .panel .left {
   display: inline-block;
   margin: 0 2em 0 0;
-  -webkit-box-flex: 1.5;
-      -ms-flex-positive: 1.5;
-          flex-grow: 1.5;
 }
 
 #middle .content .panel .right {
   display: inline-block;
-  -webkit-box-flex: 1;
-      -ms-flex-positive: 1;
-          flex-grow: 1;
+  width: 35em;
+}
+
+#middle .content .panel .right .selectors {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  margin-bottom: 1em;
 }
 
 #bottom {
@@ -240,7 +243,7 @@ h3 {
   height: 100%;
 }
 
-#footer .content .panel .info .item {
+#footer .content .panel .infos .item {
   margin-top: 2em;
 }
 
@@ -258,4 +261,58 @@ h3 {
   width: 10em;
   margin: 0;
 }
-/*# sourceMappingURL=styles.css.map */
+
+/* Leaflet CSS */
+
+#top #map {
+  background-color: #F9F9F9;
+}
+
+.leaflet-tooltip-pane {
+  width: 10em;
+}
+
+.leaflet-tooltip-pane .title {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-bottom: 0.25em;
+}
+
+.leaflet-tooltip-pane table {
+  width: 100%;
+  border: none;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.leaflet-tooltip-pane td {
+  padding: 0.7em;
+  border: none;
+}
+
+.leaflet-tooltip-pane th {
+  padding: 0.5em;
+  border: none;
+  color: #424C55;
+}
+
+.leaflet-tooltip-pane .top-row {
+  font-weight: 600;
+  border: none;
+  background-color: #F9F9F9;
+}
+
+.leaflet-tooltip-pane .center {
+  text-align: center;
+}
+
+#middle #tradeMap {
+  background-color: #FFFFFF;
+  margin: 1em 0;
+}
+
+.leaflet-tooltip-pane .trade-title {
+  font-size: 1em;
+  font-weight: 600;
+  margin-bottom: 0.25em;
+}

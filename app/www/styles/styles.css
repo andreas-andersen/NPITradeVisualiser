@@ -92,7 +92,7 @@ h3 {
   padding: 2em 0 2em 0;
 }
 
-.sidemargin .content {
+#top .content {
   max-width: 75rem;
   margin: 0 auto;
 }
@@ -131,6 +131,8 @@ h3 {
       -ms-flex-align: stretch;
           align-items: stretch;
   height: 100%;
+  max-width: 85rem;
+  margin: 0 auto;
 }
 
 #middle .content .panel {
@@ -149,14 +151,30 @@ h3 {
   margin-top: 2em;
 }
 
+#middle h2 {
+  margin-left: 2em;
+}
+
+#middle .description {
+  margin-bottom: 1em;
+}
+
 #middle .content .panel .left {
   display: inline-block;
   margin: 0 2em 0 0;
+  height: 100%;
+  width: 100%;
+}
+
+#middle .content .panel .left .partner {
+  display: inline-block;
+  width: 49%;
 }
 
 #middle .content .panel .right {
   display: inline-block;
-  width: 35em;
+  height: 100%;
+  width: 50em;
 }
 
 #middle .content .panel .right .selectors {
@@ -186,6 +204,8 @@ h3 {
       -ms-flex-align: stretch;
           align-items: stretch;
   height: 100%;
+  max-width: 85rem;
+  margin: 0 auto;
 }
 
 #bottom .content .center {
@@ -226,6 +246,8 @@ h3 {
       -ms-flex-align: stretch;
           align-items: stretch;
   height: 100%;
+  max-width: 75rem;
+  margin: 0 auto;
 }
 
 #footer .content .panel {
@@ -308,7 +330,7 @@ h3 {
 
 #middle #tradeMap {
   background-color: #FFFFFF;
-  margin: 1em 0;
+  margin-bottom: 1em;
 }
 
 .leaflet-tooltip-pane .trade-title {

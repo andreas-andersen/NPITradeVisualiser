@@ -13,13 +13,16 @@ library(sf)
 # Import trade data downloaded with "ComtradeDatabaseDownloader"
 df <- read.csv("data/gravity.csv", encoding = "UTF-8")
 
-# Generate reporter/partner pair
+# Generate reporter and reporter/partner pair vectors
 df[,"rp"] <- paste(df$repcode, df$parcode, sep = "-")
 rp <- unique(df$rp)
+reps <- unique(df$repcode)
+
+## Trade data for map
 
 # Generate first-difference change in percentage
-diff_percentage <- function(df, rp)
-{
+diff_percentage <- function(df, rp) {
+  
   temp <- df[df$rp == rp,]
   imp <- temp[temp$flow == "Import",]
   exp <- temp[temp$flow == "Export",]
@@ -46,17 +49,14 @@ diff_percentage <- function(df, rp)
   
   res <- rbind(imp, exp)
   return(res)
+  
 }
 
 c_df <-lapply(rp, function(x) diff_percentage(df, x))
 c_df <- bind_rows(c_df)
 
-# Clean data
-c_df <- c_df[c_df$year %in% c(2020, 2021),]
-c_df <- c_df[order(c_df$repcode, c_df$parcode, c_df$flow, c_df$year),]
-rownames(c_df) <- NULL
+## Trade variables for map
 
-# Create variables for map
 c_df_i_2020 <- c_df[
   (c_df$flow == "Import" & c_df$year == 2020),
   c("repcode", "parcode", "diff")
@@ -87,6 +87,37 @@ c_df_map <- cbind(
   c_df_e_2021[,2:length(c_df_e_2021)]
 )
 c_df_map["data"] <- c_df_i_2020[, "repcode_i_2020_USA"]
+
+## Trade data for graph
+
+# Reorder values in descending order in trade value for 2019 for each flow.
+order_flows <- function(df, repcode) {
+  
+  temp_i <- df[(df$repcode == repcode & df$flow == "Import"),]
+  temp_e <- df[(df$repcode == repcode & df$flow == "Export"),]
+  
+  temp_i_2019 <- temp_i[temp_i$year == 2019,]
+  temp_e_2019 <- temp_e[temp_e$year == 2019,]
+  
+  temp_i_2019 <- temp_i_2019[
+    order(temp_i_2019$value, decreasing = TRUE), c("repcode", "parcode")
+  ]
+  temp_e_2019 <- temp_e_2019[
+    order(temp_e_2019$value, decreasing = TRUE), c("repcode", "parcode")
+  ]
+  
+  res <- rbind(
+    left_join(temp_i_2019, temp_i, by = c("repcode", "parcode")),
+    left_join(temp_e_2019, temp_e, by = c("repcode", "parcode"))
+  )
+  return(res)
+  
+}
+
+d_df <- lapply(reps, function(x) order_flows(c_df, x))
+d_df <- bind_rows(d_df)
+
+rownames(d_df) <- NULL
 
 
 ### NPI DATA
@@ -139,7 +170,7 @@ trade_map <- main_map <- st_read("data/map")
 
 main_map <- left_join(
   main_map, sum_npi, by = c("ISO3" = "country_code"))
-saveRDS(test, "app/main_map.rds")
+saveRDS(main_map, "app/main_map.rds")
 
 trade_map <- left_join(
   trade_map, c_df_map, by = c("ISO3" = "parcode"))
@@ -150,7 +181,7 @@ saveRDS(trade_map, "app/trade_map.rds")
 
 saveRDS(c_npi, "app/npi.rds")
 
-saveRDS(c_df, "app/trade.rds")
+saveRDS(d_df, "app/trade.rds")
 
 
 ### COUNTRY NAME DICTIONARY
@@ -198,12 +229,6 @@ trade_labels <- lapply(
       "Imports from" } else { "Exports to" }
     year <- str_split(x, "_", simplify = TRUE)[3]
     rep <- str_split(x, "_", simplify = TRUE)[4]
-    selected <- c(
-      if (flow == "Imports" & year == "2020") "selected" else "",
-      if (flow == "Imports" & year == "2021") "selected" else "",
-      if (flow == "Exports" & year == "2020") "selected" else "",
-      if (flow == "Exports" & year == "2021") "selected" else ""
-    )
     sprintf(
       '<div class="trade-title">%s %s (%s)</div>
       %.00f%%',

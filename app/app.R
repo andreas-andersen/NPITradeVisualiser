@@ -96,6 +96,38 @@ top5_plot <- function(df, repcode, flow, year) {
   
 }
 
+si_plot <- function(df, repcode) {
+  
+  temp <- df[(df$country_code %in% c("WLD", repcode)),] %>% 
+    pivot_wider(names_from = country_code, values_from = si)
+  
+  fig <- plot_ly(
+    temp, x = ~date, y = temp[[repcode]], type = "scatter", mode = "lines",
+    name = repcode, 
+    line = list(color = "rgba(252, 118, 106, 1)", width = 2, dash = "solid"),
+    hovertemplate = paste0(
+      "<b>%{x|%d %B %Y}</b><br>",
+      "%{yaxis.title.text}: %{y:.2f}"
+    )
+  )
+  fig <- fig %>% add_trace(
+    y = ~WLD, name = "WLD",
+    line = list(color = "rgba(91, 132, 177, 0.5)", width = 2, dash = "dot")
+  )
+  fig <- fig %>% layout(
+    xaxis = list(
+      title = "Date", 
+      showspikes = TRUE, spikedash = "solid", spikethickness = 1),
+    yaxis = list(title = "Stringency Index", range = c(0, 105)),
+    legend = list(
+      xanchor = "right", x = 0.95, y = 0.95,
+      bordercolor = "#F9F9F9", borderwidth = 2),
+    margin = list(t = 0, b = 35)
+  )
+  
+  return(fig)
+  
+}
 
 
 #### SHINY (UI)
@@ -180,8 +212,9 @@ ui <- tags$html(
       tags$div(
         class = "center",
         tags$div(
-          id = "npi", class = "frame",
-          "Graph"
+          id = "npi",
+          plotlyOutput(
+            "si", height = "100%", width = "100%", inline = TRUE)
         )
       )
     )
@@ -398,6 +431,14 @@ server <- function(input, output, session) {
   output$exportPartners <- renderPlotly({
     
     top5_plot(trade, selected_country(), "Export", selected_year())
+    
+  })
+  
+  ## Plotly Stringency Index plot
+  
+  output$si <- renderPlotly({
+    
+    si_plot(npi, selected_country())
     
   })
   

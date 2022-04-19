@@ -216,7 +216,7 @@ h3 {
   -webkit-box-direction: normal;
       -ms-flex-direction: row;
           flex-direction: row;
-  width: 30em;
+  width: 50em;
   height: 30em;
   margin: 2em auto 0 auto;
 }

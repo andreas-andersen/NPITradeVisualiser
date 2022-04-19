@@ -239,3 +239,40 @@ trade_labels <- lapply(
 )
 names(trade_labels) <- trade_cols
 saveRDS(trade_labels, "app/trade_labels.RDS")
+
+
+test <- c_npi[c_npi$country_code == "USA",]
+
+
+si_plot <- function(df, repcode) {
+  
+  temp <- df[(df$country_code %in% c("WLD", repcode)),] %>% 
+    pivot_wider(names_from = country_code, values_from = si)
+  
+  fig <- plot_ly(
+    temp, x = ~date, y = temp[[repcode]], type = "scatter", mode = "lines",
+    name = repcode, 
+    line = list(color = "rgba(252, 118, 106, 1)", width = 2, dash = "solid"),
+    hovertemplate = paste0(
+      "<b>%{x|%d %B %Y}</b><br>",
+      "%{yaxis.title.text}: %{y:.2f}"
+    )
+  )
+  fig <- fig %>% add_trace(
+    y = ~WLD, name = "WLD",
+    line = list(color = "rgba(91, 132, 177, 0.5)", width = 2, dash = "dot")
+  )
+  fig <- fig %>% layout(
+    xaxis = list(
+      title = "Date", 
+      showspikes = TRUE, spikedash = "solid", spikethickness = 1),
+    yaxis = list(title = "Stringency Index", range = c(0, 105)),
+    legend = list(
+      xanchor = "right", x = 0.95, y = 0.95,
+      bordercolor = "#F9F9F9", borderwidth = 2),
+    margin = list(t = 0, b = 35)
+  )
+  
+  return(fig)
+  
+}

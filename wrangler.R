@@ -86,7 +86,7 @@ c_df_map <- cbind(
   c_df_e_2020[,2:length(c_df_e_2020)],
   c_df_e_2021[,2:length(c_df_e_2021)]
 )
-c_df_map["data"] <- c_df_i_2020[, "repcode_i_2020_USA"]
+c_df_map["trade"] <- c_df_i_2020[, "repcode_i_2020_USA"]
 
 ## Trade data for graph
 
@@ -156,11 +156,12 @@ colnames(sum_npi_2021) <- c(
   "country_code", "year", "mean_si_2021", "peak_si_2021") 
 sum_npi <- cbind(sum_npi_2020, sum_npi_2021[,c("mean_si_2021", "peak_si_2021")])
 sum_npi <- sum_npi[,c(1, 3:length(sum_npi))]
+sum_npi["npi"] <- sum_npi[,"mean_si_2021"]
 
 
 ### MAP DATA
 
-trade_map <- main_map <- st_read("data/map")
+trade_map <- npi_map <- st_read("data/map")
 
 
 
@@ -168,9 +169,9 @@ trade_map <- main_map <- st_read("data/map")
 
 ### MAP DATA
 
-main_map <- left_join(
-  main_map, sum_npi, by = c("ISO3" = "country_code"))
-saveRDS(main_map, "app/main_map.rds")
+npi_map <- inner_join(
+  npi_map, sum_npi, by = c("ISO3" = "country_code"))
+saveRDS(npi_map, "app/npi_map.rds")
 
 trade_map <- left_join(
   trade_map, c_df_map, by = c("ISO3" = "parcode"))
@@ -186,8 +187,8 @@ saveRDS(d_df, "app/trade.rds")
 
 ### COUNTRY NAME DICTIONARY
 
-country_names <- main_map$NAME
-names(country_names) <- main_map$ISO3
+country_names <- npi_map$NAME
+names(country_names) <- npi_map$ISO3
 saveRDS(country_names, "app/country_names.RDS")
 
 
@@ -214,9 +215,9 @@ sprintf(
       <td class="center">%.00f</td>
     </tr>
   </table>',
-  main_map$NAME, 
-  main_map$mean_si_2020, main_map$mean_si_2021,
-  main_map$peak_si_2020, main_map$peak_si_2021
+  npi_map$NAME, 
+  npi_map$mean_si_2020, npi_map$mean_si_2021,
+  npi_map$peak_si_2020, npi_map$peak_si_2021
 ) %>% lapply(htmltools::HTML) %>% saveRDS("app/labels.rds")
 
 ## Trade map labels

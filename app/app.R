@@ -1,6 +1,6 @@
 ####---------------------  NPI/Global Trade Visualiser  --------------------####
 ##                                                                            ##
-##     For visualizing stringency of non-pharmaceutical interventions and     ##
+##     For visualising stringency of non-pharmaceutical interventions and     ##
 ##                                global trade                                ##
 ##                                                                            ##
 ####------------------------------------------------------------------------####
@@ -12,12 +12,13 @@ library(leaflet)
 library(plotly)
 library(shiny)
 library(shinybusy)
+library(tidyr)
 
 
 
 #### IMPORT DATA
 
-main_map <- readRDS("main_map.RDS")
+npi_map <- readRDS("npi_map.RDS")
 trade_map <- readRDS("trade_map.RDS")
 npi <- readRDS("npi.RDS")
 trade <- readRDS("trade.RDS")
@@ -42,14 +43,14 @@ bin_colors <- function(palette) {
   
 }
 
-top5_plot <- function(df, repcode, flow, year) {
+top_plot <- function(df, repcode, flow, year) {
   
   temp <- df[(
     df$repcode == repcode & df$flow == flow & df$year %in% c(2019, year)
   ),]
   
-  top5 <- unique(temp$parcode)[1:5]
-  top5_temp <- temp[temp$parcode %in% top5,] %>% 
+  top <- unique(temp$parcode)[1:7]
+  top_temp <- temp[temp$parcode %in% top,] %>% 
     pivot_wider(names_from = year, values_from = value, names_prefix = "year_")
   
   if (flow == "Import") {
@@ -63,14 +64,14 @@ top5_plot <- function(df, repcode, flow, year) {
   year_var <- paste0("year_", year)
   
   fig <- plot_ly(
-    top5_temp, x = ~parcode, y = top5_temp[[year_var]], type = "bar", 
-    name = "2020", text = ~paste0(format(diff * 100, digits = 2), "%"), 
+    top_temp, x = ~parcode, y = top_temp[[year_var]], type = "bar", 
+    name = year, text = ~paste0(format(diff * 100, digits = 2), "%"), 
     textposition = "inside",
     marker = list(
       color = paste0("rgba(", color, ", 0.6)"),
       line = list(color = paste0("rgba(", color, ", 1)"), width = 0)),
     hovertemplate = paste0(
-      "<b>", top5_temp$partner, "</b> (", top5_temp$flow, ")<br>",
+      "<b>", top_temp$partner, "</b> (", top_temp$flow, ")<br>",
       "%{yaxis.title.text}: %{y}"
     )
   )
@@ -83,7 +84,7 @@ top5_plot <- function(df, repcode, flow, year) {
   fig <- fig %>% layout(
     xaxis = list(
       categoryorder = "array",
-      categoryarray = top5, title = xtitle),
+      categoryarray = top, title = xtitle),
     yaxis = list(title = "Trade Value (US$)"),
     barmode = "overlay",
     legend = list(
@@ -96,24 +97,35 @@ top5_plot <- function(df, repcode, flow, year) {
   
 }
 
-si_plot <- function(df, repcode) {
+si_plot <- function(df, repcode, ...) {
   
-  temp <- df[(df$country_code %in% c("WLD", repcode)),] %>% 
+  quad_palette <- c("#FC766A", "#5B84B180", "#B0B8B480", "#184A4580")
+  
+  temp <- df[(df$country_code %in% c("WLD", repcode, ...)),] %>% 
     pivot_wider(names_from = country_code, values_from = si)
   
   fig <- plot_ly(
-    temp, x = ~date, y = temp[[repcode]], type = "scatter", mode = "lines",
-    name = repcode, 
-    line = list(color = "rgba(252, 118, 106, 1)", width = 2, dash = "solid"),
+    temp, x = ~date, y = ~WLD, type = "scatter", mode = "lines", name = "WLD",
+    line = list(color = "rgba(91, 132, 177, 0.5)", width = 2, dash = "dot"),
     hovertemplate = paste0(
       "<b>%{x|%d %B %Y}</b><br>",
       "%{yaxis.title.text}: %{y:.2f}"
     )
   )
+  if (length(c(...)) > 0) {
+    other_countries <- c(...)
+    for (i in 1:length(other_countries)) {
+      fig <- fig %>% add_trace(
+        y = temp[[other_countries[i]]], name = other_countries[i],
+        line = list(color = quad_palette[i+1], width = 2, dash = "solid")
+      )
+    }
+  }
   fig <- fig %>% add_trace(
-    y = ~WLD, name = "WLD",
-    line = list(color = "rgba(91, 132, 177, 0.5)", width = 2, dash = "dot")
+    y = temp[[repcode]], name = repcode, 
+    line = list(color = quad_palette[1], width = 2, dash = "solid")
   )
+  
   fig <- fig %>% layout(
     xaxis = list(
       title = "Date", 
@@ -136,6 +148,8 @@ ui <- tags$html(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles/styles.css")
   ),
+  add_busy_spinner("scaling-squares", color = "#2C3E50",
+                   timeout = 1000, position = "full-page", onstart = TRUE),
   
   tags$div(
     id = "title", class = "sidemargin",
@@ -151,6 +165,10 @@ ui <- tags$html(
     id = "top", class = "sidemargin",
     tags$div(
       class = "content",
+      radioButtons(
+        "aggSelector", label = NULL, 
+        choices = list("Mean SI (2020)" = "mean", "Peak SI (2020)" = "peak"),
+        selected = "mean", width = "10em"),
       leafletOutput("map", height = "50em", width = "100%")
     )
   ),
@@ -191,10 +209,10 @@ ui <- tags$html(
           tags$div(
             class = "selectors",
             selectInput(
-              "year_selector", label = NULL, width = "50%",
+              "yearSelector", label = NULL, width = "50%",
               choices = c(2020, 2021), selected = 2020),
             selectInput(
-              "flow_selector", label = NULL, width = "50%",
+              "flowSelector", label = NULL, width = "50%",
               choices = c("Imports" = "i", "Exports" = "e"), selected = "i")
           )
         )
@@ -210,12 +228,26 @@ ui <- tags$html(
         "Stringency Index"
       ),
       tags$div(
-        class = "center",
+        class = "panel",
         tags$div(
-          id = "npi",
-          plotlyOutput(
-            "si", height = "100%", width = "100%", inline = TRUE)
-        )
+          class = "left",
+          "Compare SI with:",
+          selectizeInput(
+            "comparisonSelector", 
+            choices = NULL, label = NULL,
+            options = list(maxItems = 3, maxOptions = 5))
+        ),
+        tags$div(
+          class = "center",
+          tags$div(
+            id = "npi",
+            plotlyOutput(
+              "si", height = "100%", width = "100%", inline = TRUE)
+          )
+        ),
+        tags$div(
+          class = "right"
+        ),
       )
     )
   ),
@@ -289,35 +321,59 @@ server <- function(input, output, session) {
   
   ### REACTIVE VALUES
   
+  ## NPI map data
+  
+  filtered_npi_map <- reactiveValues(
+    map = npi_map,
+  )
+  
+  observeEvent(
+    c(
+      input$aggSelector  
+    ), ignoreInit = TRUE, {
+      
+      selector <- paste(
+        selected_agg(),
+        "si",
+        "2020",
+        sep = "_"
+      )
+      filtered_trade_map$npi["npi"] <- npi_map[[selector]]
+      
+    }
+  )
+  
   ## Trade map data
   
-  filtered_map <- reactiveValues(
-    data = trade_map,
+  filtered_trade_map <- reactiveValues(
+    map = trade_map,
     labels = trade_labels[["repcode_i_2020_USA"]]
   )
   
   observeEvent(
     c(
       input$map_shape_click, 
-      input$year_selector, 
-      input$flow_selector
+      input$yearSelector, 
+      input$flowSelector
     ), ignoreInit = TRUE, {
       
       selector <- paste(
         "repcode", 
         selected_flow(),
         selected_year(),
-        selected_country()
-        , sep = "_"
+        selected_country(), 
+        sep = "_"
       )
-      filtered_map$data["data"] <- {
+      
+      filtered_trade_map$map["data"] <- {
         if (selector %in% colnames(trade_map)) {
           trade_map[[selector]]
         } else {
           NA
         }
       }
-      filtered_map$labels <- {
+      
+      filtered_trade_map$labels <- {
         if (selector %in% colnames(trade_map)) {
           trade_labels[[selector]]
         } else {
@@ -328,8 +384,41 @@ server <- function(input, output, session) {
     }
   )
   
+  ## Possible comparison countries
+  
+  comparison_countries <- reactiveValues(
+    data = country_names[names(country_names) != "USA"]
+  )
+  
+  observeEvent(
+    c(
+      input$map_shape_click 
+    ), ignoreInit = FALSE, ignoreNULL = FALSE, {
+      
+      comparison_countries$data <- {
+        country_names[names(country_names) != selected_country()]
+      }
+      
+      updateSelectizeInput(
+        session, "comparisonSelector", 
+        choices = as.list(setNames(
+          names(comparison_countries$data), comparison_countries$data)), 
+        server = TRUE
+      )
+      
+    }
+  )
+  
   
   ### INPUTS
+  
+  ## Selected aggregation
+  
+  selected_agg <- reactive({
+    
+    input$aggSelector
+    
+  })
   
   ## Selected country
   
@@ -343,11 +432,17 @@ server <- function(input, output, session) {
     
   })
   
+  other_countries <- reactive({
+    
+    country_names[names(country_names) != input$map_shape_click$id]
+    
+  })
+  
   ## Selected year
   
   selected_year <- reactive({
     
-    as.numeric(input$year_selector)
+    as.numeric(input$yearSelector)
     
   })
   
@@ -355,41 +450,55 @@ server <- function(input, output, session) {
   
   selected_flow <- reactive({
     
-    input$flow_selector
+    input$flowSelector
+    
+  })
+  
+  ## Selected comparison countries
+  
+  selected_comparison <- reactive({
+    
+    input$comparisonSelector
     
   })
   
 
   ### OUPUTS
   
-  ## Leaflet NPI output
+  ## Leaflet NPI map output
   
   output$map <- renderLeaflet({
     
     leaflet(
-      main_map,
+      npi_map,
       options = leafletOptions(
         zoomControl = FALSE,
         minZoom = 2,
         maxZoom = 4)
      ) %>%
        setView(0, 30, 2) %>% 
-       setMaxBounds(-180, -60, 180, 80) %>% 
+       setMaxBounds(-180, -60, 180, 80)
+    
+  })
+  
+  observe({
+    
+    leafletProxy("map", data = filtered_npi_map$map) %>% 
       addPolygons(
         color = "#666666", weight = 0.5, fillOpacity = 0.5,
-        fillColor = ~quantile_colors("Reds", mean_si_2020)(mean_si_2020),
+        fillColor = ~quantile_colors("Reds", npi)(npi),
         highlightOptions = highlightOptions(
           color = "#000000", weight = 1, bringToFront = TRUE),
         label = labels,
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "2em", width = "20em"),
-          textsize = "0.8rem", direction = "auto"),
+          textsize = "0.8rem", direction = "auto", sticky = TRUE),
         layerId = ~ISO3
-      )
+      ) 
     
   })
   
-  ## Leaflet trade output
+  ## Leaflet trade map output
   
   output$tradeMap <- renderLeaflet({
     
@@ -398,7 +507,7 @@ server <- function(input, output, session) {
       options = leafletOptions(
         zoomControl = FALSE,
         minZoom = 1,
-        maxZoom = 1)
+        maxZoom = 4)
     ) %>%
       setView(0, 30, 1) %>% 
       setMaxBounds(-180, -60, 180, 80)
@@ -407,15 +516,15 @@ server <- function(input, output, session) {
   
   observe({
     
-    leafletProxy("tradeMap", data = filtered_map$data) %>%
+    leafletProxy("tradeMap", data = filtered_trade_map$map) %>%
       clearShapes() %>%
       addPolygons(
         stroke = FALSE, fillOpacity = 0.8,
-        fillColor = ~bin_colors("RdBu")(data),
-        label = filtered_map$labels,
+        fillColor = ~bin_colors("RdBu")(trade),
+        label = filtered_trade_map$labels,
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "1em"),
-          textsize = "0.8rem", direction = "auto"),
+          textsize = "0.8rem", direction = "auto")
       )
     
   })
@@ -424,13 +533,13 @@ server <- function(input, output, session) {
   
   output$importPartners <- renderPlotly({
     
-    top5_plot(trade, selected_country(), "Import", selected_year())
+    top_plot(trade, selected_country(), "Import", selected_year())
     
   })
   
   output$exportPartners <- renderPlotly({
     
-    top5_plot(trade, selected_country(), "Export", selected_year())
+    top_plot(trade, selected_country(), "Export", selected_year())
     
   })
   
@@ -438,7 +547,7 @@ server <- function(input, output, session) {
   
   output$si <- renderPlotly({
     
-    si_plot(npi, selected_country())
+    si_plot(npi, selected_country(), selected_comparison())
     
   })
   

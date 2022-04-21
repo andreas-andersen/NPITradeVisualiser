@@ -142,6 +142,7 @@ si_plot <- function(df, repcode, ...) {
 }
 
 
+
 #### SHINY (UI)
 
 ui <- tags$html(
@@ -493,8 +494,7 @@ server <- function(input, output, session) {
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "2em", width = "20em"),
           textsize = "0.8rem", direction = "auto", sticky = TRUE),
-        layerId = ~ISO3
-      ) 
+        layerId = ~ISO3) 
     
   })
   
@@ -524,8 +524,7 @@ server <- function(input, output, session) {
         label = filtered_trade_map$labels,
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "1em"),
-          textsize = "0.8rem", direction = "auto")
-      )
+          textsize = "0.8rem", direction = "auto"))
     
   })
   
@@ -560,6 +559,7 @@ server <- function(input, output, session) {
   })
 
 }
+
 
 
 shinyApp(ui = ui, server)

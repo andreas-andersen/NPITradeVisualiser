@@ -171,18 +171,18 @@ trade_map <- npi_map <- st_read("data/map")
 
 npi_map <- inner_join(
   npi_map, sum_npi, by = c("ISO3" = "country_code"))
-saveRDS(npi_map, "app/npi_map.rds")
+saveRDS(npi_map, "app/npi_map.RDS")
 
 trade_map <- left_join(
   trade_map, c_df_map, by = c("ISO3" = "parcode"))
-saveRDS(trade_map, "app/trade_map.rds")
+saveRDS(trade_map, "app/trade_map.RDS")
 
 
 ### DATA FRAMES
 
-saveRDS(c_npi, "app/npi.rds")
+saveRDS(c_npi, "app/npi.RDS")
 
-saveRDS(d_df, "app/trade.rds")
+saveRDS(d_df, "app/trade.RDS")
 
 
 ### COUNTRY NAME DICTIONARY
@@ -218,7 +218,7 @@ sprintf(
   npi_map$NAME, 
   npi_map$mean_si_2020, npi_map$mean_si_2021,
   npi_map$peak_si_2020, npi_map$peak_si_2021
-) %>% lapply(htmltools::HTML) %>% saveRDS("app/labels.rds")
+) %>% lapply(htmltools::HTML) %>% saveRDS("app/labels.RDS")
 
 ## Trade map labels
 
@@ -240,40 +240,3 @@ trade_labels <- lapply(
 )
 names(trade_labels) <- trade_cols
 saveRDS(trade_labels, "app/trade_labels.RDS")
-
-
-test <- c_npi[c_npi$country_code == "USA",]
-
-
-si_plot <- function(df, repcode) {
-  
-  temp <- df[(df$country_code %in% c("WLD", repcode)),] %>% 
-    pivot_wider(names_from = country_code, values_from = si)
-  
-  fig <- plot_ly(
-    temp, x = ~date, y = temp[[repcode]], type = "scatter", mode = "lines",
-    name = repcode, 
-    line = list(color = "rgba(252, 118, 106, 1)", width = 2, dash = "solid"),
-    hovertemplate = paste0(
-      "<b>%{x|%d %B %Y}</b><br>",
-      "%{yaxis.title.text}: %{y:.2f}"
-    )
-  )
-  fig <- fig %>% add_trace(
-    y = ~WLD, name = "WLD",
-    line = list(color = "rgba(91, 132, 177, 0.5)", width = 2, dash = "dot")
-  )
-  fig <- fig %>% layout(
-    xaxis = list(
-      title = "Date", 
-      showspikes = TRUE, spikedash = "solid", spikethickness = 1),
-    yaxis = list(title = "Stringency Index", range = c(0, 105)),
-    legend = list(
-      xanchor = "right", x = 0.95, y = 0.95,
-      bordercolor = "#F9F9F9", borderwidth = 2),
-    margin = list(t = 0, b = 35)
-  )
-  
-  return(fig)
-  
-}

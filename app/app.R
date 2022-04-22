@@ -11,7 +11,6 @@
 library(leaflet)
 library(plotly)
 library(shiny)
-library(shinybusy)
 library(tidyr)
 
 
@@ -149,7 +148,7 @@ ui <- tags$html(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles/styles.css")
   ),
-  add_busy_spinner("scaling-squares", color = "#2C3E50",
+  shinybusy::add_busy_spinner("scaling-squares", color = "#2C3E50",
                    timeout = 1000, position = "full-page", onstart = TRUE),
   
   tags$div(
@@ -170,7 +169,24 @@ ui <- tags$html(
         "aggSelector", label = NULL, 
         choices = list("Mean SI (2020)" = "mean", "Peak SI (2020)" = "peak"),
         selected = "mean", width = "10em"),
-      leafletOutput("map", height = "50em", width = "100%")
+      leafletOutput("map", height = "50em", width = "100%"),
+      tags$hr(),
+      tags$div(
+        class = "note",
+        tags$span(class = "italic", "Note: "),
+        tags$span(
+          textOutput("currentAgg", inline = TRUE), 
+          " Stringency Index in 2020, reported by ",
+          tags$a(
+            href = paste0(
+              "https://www.bsg.ox.ac.uk/research/research-projects",
+              "/covid-19-government-response-tracker"),
+            target = "_blank",
+            "Oxford's COVID-19 Government Response Tracker"
+          ),
+          "."
+        )
+      )
     )
   ),
   
@@ -192,30 +208,54 @@ ui <- tags$html(
           tags$div(
             class = "partner",
             plotlyOutput(
-              "importPartners", height = "23em", width = "100%", inline = TRUE)
+              "importPartners", height = "22em", width = "100%", inline = TRUE)
           ),
           tags$div(
             class = "partner",
             plotlyOutput(
-              "exportPartners", height = "23em", width = "100%", inline = TRUE)
+              "exportPartners", height = "22em", width = "100%", inline = TRUE)
           )
         ),
         tags$div(
           class = "right",
           tags$div(
             class = "description",
-            "Trade flows relative to 2019"
+            textOutput("currentFlow", inline = TRUE),
+            "flows in ",
+            textOutput("currentYear", inline = TRUE),
+            " relative to 2019"
           ),
           leafletOutput("tradeMap", height = "25em", width = "100%"),
           tags$div(
             class = "selectors",
             selectInput(
-              "yearSelector", label = NULL, width = "50%",
+              "yearSelector", label = NULL, width = "50%", 
               choices = c(2020, 2021), selected = 2020),
             selectInput(
-              "flowSelector", label = NULL, width = "50%",
+              "flowSelector", label = NULL, width = "50%", 
               choices = c("Imports" = "i", "Exports" = "e"), selected = "i")
           )
+        )
+      ),
+      tags$hr(),
+      tags$div(
+        class = "note",
+        tags$span(class = "italic", "Note: "),
+        tags$span(
+          "Annual trade data (2019 - 2021) from the ",
+          tags$a(
+            href = "https://comtrade.un.org/",
+            target = "_blank",
+            "Comtrade database"
+          ),
+          " downloaded using ",
+          tags$a(
+            href = (
+              "https://github.com/andreas-andersen/ComtradeDatabaseDownloader"),
+            target = "_blank",
+            "ComtradeDatabaseDownloader"
+          ),
+          "."
         )
       )
     )
@@ -232,7 +272,12 @@ ui <- tags$html(
         class = "panel",
         tags$div(
           class = "left",
-          "Compare SI with:",
+          tags$div(
+            class = "description",
+            "Compare ",
+            textOutput("currentCountryCode", inline = TRUE),
+            " SI with:"
+          ),
           selectizeInput(
             "comparisonSelector", 
             choices = NULL, label = NULL,
@@ -243,8 +288,23 @@ ui <- tags$html(
           tags$div(
             id = "npi",
             plotlyOutput(
-              "si", height = "100%", width = "100%", inline = TRUE)
-          )
+              "si", height = "100%", width = "100%", inline = TRUE),
+            tags$div(
+              class = "note",
+              tags$span(class = "italic", "Note: "),
+              tags$span(
+                "Time series of Stringency Index (2020 - 2021) from ",
+                tags$a(
+                  href = paste0(
+                    "https://www.bsg.ox.ac.uk/research/research-projects",
+                    "/covid-19-government-response-tracker"),
+                  target = "_blank",
+                  "Oxford's COVID-19 Government Response Tracker"
+                ),
+                "."
+              )
+            )
+          ),
         ),
         tags$div(
           class = "right"
@@ -261,7 +321,7 @@ ui <- tags$html(
         class = "panel",
         tags$div(
           class = "infos left",
-          tags$h2(
+          tags$h3(
             "NPI/Global Trade Visualiser"
           ),
           tags$div(
@@ -339,7 +399,7 @@ server <- function(input, output, session) {
         "2020",
         sep = "_"
       )
-      filtered_trade_map$npi["npi"] <- npi_map[[selector]]
+      filtered_npi_map$map["npi"] <- npi_map[[selector]]
       
     }
   )
@@ -366,7 +426,7 @@ server <- function(input, output, session) {
         sep = "_"
       )
       
-      filtered_trade_map$map["data"] <- {
+      filtered_trade_map$map["trade"] <- {
         if (selector %in% colnames(trade_map)) {
           trade_map[[selector]]
         } else {
@@ -489,7 +549,7 @@ server <- function(input, output, session) {
         color = "#666666", weight = 0.5, fillOpacity = 0.5,
         fillColor = ~quantile_colors("Reds", npi)(npi),
         highlightOptions = highlightOptions(
-          color = "#000000", weight = 1, bringToFront = TRUE),
+          color = "#222222", weight = 2, bringToFront = TRUE),
         label = labels,
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "2em", width = "20em"),
@@ -555,6 +615,42 @@ server <- function(input, output, session) {
   output$currentCountry <- renderText({
     
     country_names[selected_country()]
+    
+  })
+  
+  ## Current country code text
+  
+  output$currentCountryCode <- renderText({
+    
+    selected_country()
+    
+  })
+  
+  ## Current aggregation text
+  
+  output$currentAgg <- renderText({
+    
+    tools::toTitleCase(selected_agg())
+    
+  })
+  
+  ## Current flow text
+  
+  output$currentFlow <- renderText({
+    
+    if (selected_flow() == "i") {
+      "Import"
+    } else {
+      "Export"
+    }
+    
+  })
+  
+  ## Current year text
+  
+  output$currentYear <- renderText({
+    
+    selected_year()
     
   })
 

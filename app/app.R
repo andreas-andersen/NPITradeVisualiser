@@ -12,6 +12,7 @@ library(leaflet)
 library(plotly)
 library(shiny)
 library(tidyr)
+library(sf)
 
 
 

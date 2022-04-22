@@ -21,6 +21,12 @@ if (file.exists("api.env")) {
 }
 
 
+#### CREATE DIRECTORIES
+
+f <- "data/map"
+dir.create("data", showWarnings = FALSE)
+dir.create(f, showWarnings = FALSE)
+
 
 #### GET FILES
 
@@ -43,8 +49,6 @@ download.file(url = url_oxcgrt, "data/npi.csv")
 
 ## Get spatial map data
 
-f <- "data/map"
-dir.create(f, showWarnings = FALSE)
 url_map <- "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip"
 download.file(url = url_map , destfile = file.path(f, "world.zip"))
 unzip(file.path(f, "world.zip"), exdir = f)

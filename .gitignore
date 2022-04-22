@@ -4,3 +4,6 @@ data/**
 .RData
 .Ruserdata
 *.env
+template.html
+template_img
+template_styles

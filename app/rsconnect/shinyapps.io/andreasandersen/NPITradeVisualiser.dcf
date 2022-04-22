@@ -1,0 +1,13 @@
+name: NPITradeVisualiser
+title: NPITradeVisualiser
+username:
+account: andreasandersen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6146743
+bundleId: 5824448
+url: https://andreasandersen.shinyapps.io/NPITradeVisualiser/
+when: 1650592111.89835
+lastSyncTime: 1650592111.89835
+asMultiple: FALSE
+asStatic: FALSE

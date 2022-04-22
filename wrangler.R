@@ -60,25 +60,26 @@ c_df <- bind_rows(c_df)
 c_df_i_2020 <- c_df[
   (c_df$flow == "Import" & c_df$year == 2020),
   c("repcode", "parcode", "diff")
-]
-c_df_i_2020 <- spread(c_df_i_2020, repcode, diff, sep = "_i_2020_")
+] %>% pivot_wider(
+  names_from = repcode, values_from = diff, names_prefix = "i_2020_")
+
 c_df_i_2021 <- c_df[
   (c_df$flow == "Import" & c_df$year == 2021),
   c("repcode", "parcode", "diff")
-]
-c_df_i_2021 <- spread(c_df_i_2021, repcode, diff, sep = "_i_2021_")
+] %>% pivot_wider(
+  names_from = repcode, values_from = diff, names_prefix = "i_2021_")
 
 c_df_e_2020 <- c_df[
   (c_df$flow == "Export" & c_df$year == 2020),
   c("repcode", "parcode", "diff")
-]
-c_df_e_2020 <- spread(c_df_e_2020, repcode, diff, sep = "_e_2020_")
+] %>% pivot_wider(
+  names_from = repcode, values_from = diff, names_prefix = "e_2020_")
 
 c_df_e_2021 <- c_df[
   (c_df$flow == "Import" & c_df$year == 2021),
   c("repcode", "parcode", "diff")
-]
-c_df_e_2021 <- spread(c_df_e_2021, repcode, diff, sep = "_e_2021_")
+] %>% pivot_wider(
+  names_from = repcode, values_from = diff, names_prefix = "e_2021_")
 
 c_df_map <- cbind(
   c_df_i_2020, 
@@ -86,7 +87,7 @@ c_df_map <- cbind(
   c_df_e_2020[,2:length(c_df_e_2020)],
   c_df_e_2021[,2:length(c_df_e_2021)]
 )
-c_df_map["trade"] <- c_df_i_2020[, "repcode_i_2020_USA"]
+c_df_map["trade"] <- c_df_i_2020[, "i_2020_USA"]
 
 ## Trade data for graph
 
@@ -239,4 +240,9 @@ trade_labels <- lapply(
   }
 )
 names(trade_labels) <- trade_cols
+
+# Replace "NA%" with "-"
+trade_labels <- lapply(
+  trade_labels, function(x) lapply(x, function(y) gsub("NA%", "-", y)))
+
 saveRDS(trade_labels, "app/trade_labels.RDS")

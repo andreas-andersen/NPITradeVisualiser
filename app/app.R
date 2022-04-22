@@ -134,7 +134,7 @@ si_plot <- function(df, repcode, ...) {
     legend = list(
       xanchor = "right", x = 0.95, y = 0.95,
       bordercolor = "#F9F9F9", borderwidth = 2),
-    margin = list(t = 0, b = 35)
+    margin = list(t = 0, b = 45)
   )
   
   return(fig)
@@ -147,7 +147,9 @@ si_plot <- function(df, repcode, ...) {
 
 ui <- tags$html(
   tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "styles/styles.css")
+    tags$link(
+      rel = "stylesheet", type = "text/css", href = "styles/styles.css"),
+    tags$title("NPI Global Trade Visualiser")
   ),
   shinybusy::add_busy_spinner("scaling-squares", color = "#2C3E50",
                    timeout = 1000, position = "full-page", onstart = TRUE),
@@ -409,7 +411,7 @@ server <- function(input, output, session) {
   
   filtered_trade_map <- reactiveValues(
     map = trade_map,
-    labels = trade_labels[["repcode_i_2020_USA"]]
+    labels = trade_labels[["i_2020_USA"]]
   )
   
   observeEvent(
@@ -420,7 +422,6 @@ server <- function(input, output, session) {
     ), ignoreInit = TRUE, {
       
       selector <- paste(
-        "repcode", 
         selected_flow(),
         selected_year(),
         selected_country(), 

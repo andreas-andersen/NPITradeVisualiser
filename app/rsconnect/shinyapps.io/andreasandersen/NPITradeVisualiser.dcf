@@ -5,9 +5,9 @@ account: andreasandersen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6146743
-bundleId: 5824448
+bundleId: 5830606
 url: https://andreasandersen.shinyapps.io/NPITradeVisualiser/
-when: 1650592111.89835
-lastSyncTime: 1650592111.89835
+when: 1650762053.48505
+lastSyncTime: 1650762053.48505
 asMultiple: FALSE
 asStatic: FALSE

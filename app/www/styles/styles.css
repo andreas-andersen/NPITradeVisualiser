@@ -63,7 +63,7 @@ body {
 }
 
 h1 {
-  font-size: 4em;
+  font-size: 3.5em;
   font-weight: 300;
 }
 
@@ -91,9 +91,9 @@ a {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
-  height: 6em;
+  height: 4em;
   text-align: center;
-  padding: 2em 0 2em 0;
+  margin: 2em 0 2em 0;
 }
 
 .frame {
@@ -110,7 +110,7 @@ a {
   position: relative;
   max-width: 75rem;
   margin: 0 auto;
-  padding: 5em;
+  padding: 2.5em 5em;
   border-radius: 2em;
   -webkit-box-shadow: rgb(0 0 0 / 24%) 0px 3px 8px;
           box-shadow: rgb(0 0 0 / 24%) 0px 3px 8px;
@@ -127,6 +127,13 @@ a {
   padding: 2em;
   opacity: 0.5;
   background-color: #FFFFFF;
+}
+
+#top .title {
+  position: relative;
+  width: 100%;
+  margin-bottom: 2.5em;
+  text-align: center;
 }
 
 #aggSelector {
@@ -166,7 +173,7 @@ a {
 }
 
 #middle {
-  margin-bottom: 14em;
+  margin-bottom: 8em;
 }
 
 #middle .content {
@@ -180,7 +187,6 @@ a {
   -webkit-box-align: stretch;
       -ms-flex-align: stretch;
           align-items: stretch;
-  height: 24em;
   max-width: 85em;
   margin: 0 auto;
 }
@@ -239,7 +245,7 @@ a {
 }
 
 #bottom {
-  margin-bottom: 10em;
+  margin-bottom: 8em;
 }
 
 #bottom .content {
@@ -373,7 +379,7 @@ a {
   width: 10em;
 }
 
-.leaflet-tooltip-pane .title {
+.leaflet-tooltip-pane .label-title {
   font-size: 1.5em;
   font-weight: 600;
   margin-bottom: 0.25em;

@@ -198,7 +198,7 @@ saveRDS(country_names, "app/country_names.RDS")
 ## Main map labels
 
 sprintf(
-  '<div class="title">%s</div> 
+  '<div class="label-title">%s</div> 
   <table>
     <tr class="top-row">
       <th></th>
@@ -227,7 +227,7 @@ trade_cols <- colnames(trade_map)[14:length(trade_map)-2]
 trade_labels <- lapply(
   trade_cols, 
   function(x) {
-    flow <- if (str_split(x, "_", simplify = TRUE)[2] == "i") {
+    flow <- if (str_split(x, "_", simplify = TRUE)[1] == "i") {
       "Imports from" } else { "Exports to" }
     year <- str_split(x, "_", simplify = TRUE)[3]
     rep <- str_split(x, "_", simplify = TRUE)[4]

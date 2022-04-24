@@ -45,9 +45,11 @@ bin_colors <- function(palette) {
 
 top_plot <- function(df, repcode, flow, year) {
   
-  temp <- df[(
-    df$repcode == repcode & df$flow == flow & df$year %in% c(2019, year)
-  ),]
+  temp <- df[(df$flow == flow & df$year %in% c(2019, year)),]
+  
+  if (nrow(temp) == 0) {
+    return(NULL)
+  }
   
   top <- unique(temp$parcode)[1:7]
   top_temp <- temp[temp$parcode %in% top,] %>% 
@@ -71,8 +73,8 @@ top_plot <- function(df, repcode, flow, year) {
       color = paste0("rgba(", color, ", 0.6)"),
       line = list(color = paste0("rgba(", color, ", 1)"), width = 0)),
     hovertemplate = paste0(
-      "<b>", top_temp$partner, "</b> (", top_temp$flow, ")<br>",
-      "%{yaxis.title.text}: %{y}"
+      "<b>", top_temp$partner, "</b> (", top_temp$flow, "s)<br>",
+      "%{y} US$"
     )
   )
   fig <- fig %>% add_trace(
@@ -172,6 +174,12 @@ ui <- tags$html(
         "aggSelector", label = NULL, 
         choices = list("Mean SI (2020)" = "mean", "Peak SI (2020)" = "peak"),
         selected = "mean", width = "10em"),
+      tags$div(
+        class = "title",
+        tags$h3(
+          textOutput("currentTitle") 
+        )
+      ),
       leafletOutput("map", height = "50em", width = "100%"),
       tags$hr(),
       tags$div(
@@ -206,7 +214,7 @@ ui <- tags$html(
           class = "left",
           tags$div(
             class = "description",
-            "Top trading partners"
+            textOutput("currentPartners")
           ),
           tags$div(
             class = "partner",
@@ -223,10 +231,7 @@ ui <- tags$html(
           class = "right",
           tags$div(
             class = "description",
-            textOutput("currentFlow", inline = TRUE),
-            "flows in ",
-            textOutput("currentYear", inline = TRUE),
-            " relative to 2019"
+            textOutput("currentPartnersFlows")
           ),
           leafletOutput("tradeMap", height = "25em", width = "100%"),
           tags$div(
@@ -240,7 +245,6 @@ ui <- tags$html(
           )
         )
       ),
-      tags$hr(),
       tags$div(
         class = "note",
         tags$span(class = "italic", "Note: "),
@@ -364,7 +368,6 @@ ui <- tags$html(
         ),
         tags$div(
           class = "infos right",
-          "Placeholder"
         )
       )
     )
@@ -409,9 +412,10 @@ server <- function(input, output, session) {
   
   ## Trade map data
   
-  filtered_trade_map <- reactiveValues(
+  filtered_trade <- reactiveValues(
     map = trade_map,
-    labels = trade_labels[["i_2020_USA"]]
+    labels = trade_labels[["i_2020_USA"]],
+    top = trade[trade$repcode == "USA",]
   )
   
   observeEvent(
@@ -428,7 +432,7 @@ server <- function(input, output, session) {
         sep = "_"
       )
       
-      filtered_trade_map$map["trade"] <- {
+      filtered_trade$map["trade"] <- {
         if (selector %in% colnames(trade_map)) {
           trade_map[[selector]]
         } else {
@@ -436,12 +440,16 @@ server <- function(input, output, session) {
         }
       }
       
-      filtered_trade_map$labels <- {
+      filtered_trade$labels <- {
         if (selector %in% colnames(trade_map)) {
           trade_labels[[selector]]
         } else {
           NULL
         }
+      }
+      
+      filtered_trade$top <- {
+        trade[trade$repcode == selected_country(),]
       }
       
     }
@@ -578,12 +586,12 @@ server <- function(input, output, session) {
   
   observe({
     
-    leafletProxy("tradeMap", data = filtered_trade_map$map) %>%
+    leafletProxy("tradeMap", data = filtered_trade$map) %>%
       clearShapes() %>%
       addPolygons(
         stroke = FALSE, fillOpacity = 0.8,
         fillColor = ~bin_colors("RdBu")(trade),
-        label = filtered_trade_map$labels,
+        label = filtered_trade$labels,
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "1em"),
           textsize = "0.8rem", direction = "auto"))
@@ -594,13 +602,13 @@ server <- function(input, output, session) {
   
   output$importPartners <- renderPlotly({
     
-    top_plot(trade, selected_country(), "Import", selected_year())
+    top_plot(filtered_trade$top, selected_country(), "Import", selected_year())
     
   })
   
   output$exportPartners <- renderPlotly({
     
-    top_plot(trade, selected_country(), "Export", selected_year())
+    top_plot(filtered_trade$top, selected_country(), "Export", selected_year())
     
   })
   
@@ -609,6 +617,17 @@ server <- function(input, output, session) {
   output$si <- renderPlotly({
     
     si_plot(npi, selected_country(), selected_comparison())
+    
+  })
+  
+  ## Current title text
+  
+  output$currentTitle <- renderText({
+    
+    paste0(
+      tools::toTitleCase(selected_agg()),
+      " Stringency Index (2020)"
+    )
     
   })
   
@@ -640,11 +659,7 @@ server <- function(input, output, session) {
   
   output$currentFlow <- renderText({
     
-    if (selected_flow() == "i") {
-      "Import"
-    } else {
-      "Export"
-    }
+
     
   })
   
@@ -653,6 +668,54 @@ server <- function(input, output, session) {
   output$currentYear <- renderText({
     
     selected_year()
+    
+  })
+  
+  ## Current trading partners text
+  
+  output$currentPartners <- renderText({
+    
+    if (nrow(filtered_trade$top) == 0) {
+      paste0(
+        "No trade data found for ",
+        selected_country()
+      )
+    } else if (is.na(filtered_trade$map$trade)) {
+      paste0(
+        "No trade data found for ",
+        selected_country(),
+        " in ",
+        selected_year()
+      )
+    } else {
+      paste0(
+        "Change in trade flows of top trading partners of ",
+        selected_country(),
+        " relative to 2019"
+      )
+    }
+    
+  })
+  
+  ## Current trading partners flow text
+  
+  output$currentPartnersFlows <- renderText({
+    
+    if (is.na(filtered_trade$map$trade)) {
+      ""
+    } else {
+      paste0(
+        if (selected_flow() == "i") {
+          "Import flows to "
+        } else {
+          "Export flows from "
+        },
+        selected_country(),
+        " in ",
+        selected_year(),
+        " relative to 2019"
+      )
+    }
     
   })
 

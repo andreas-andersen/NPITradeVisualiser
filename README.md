@@ -1,5 +1,8 @@
 # NPITradeVisualiser
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/andreas-andersen/NPITradeVisualiser?label=last%20version)
+![GitHub release date](https://img.shields.io/github/release-date/andreas-andersen/NPITradeVisualiser)
+
 A shiny dashboard for visualising COVID-19 NPI stringency and changes in 
 global trade flows. Includes scripts for downloading, wrangling and deploying.
 

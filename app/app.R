@@ -193,9 +193,18 @@ ui <- tags$html(
               "https://www.bsg.ox.ac.uk/research/research-projects",
               "/covid-19-government-response-tracker"),
             target = "_blank",
-            "Oxford's COVID-19 Government Response Tracker"
-          ),
-          "."
+            "Oxford's COVID-19 Government Response Tracker."
+          )
+        ),
+        tags$span(
+          "Map data from ",
+          tags$a(
+            href = paste0(
+              "https://public.opendatasoft.com/explore/dataset",
+              "/world-administrative-boundaries/api/"),
+            target = "_blank",
+            "opendatasoft."
+          )
         )
       )
     )
@@ -306,9 +315,8 @@ ui <- tags$html(
                     "https://www.bsg.ox.ac.uk/research/research-projects",
                     "/covid-19-government-response-tracker"),
                   target = "_blank",
-                  "Oxford's COVID-19 Government Response Tracker"
-                ),
-                "."
+                  "Oxford's COVID-19 Government Response Tracker."
+                )
               )
             )
           ),
@@ -414,6 +422,7 @@ server <- function(input, output, session) {
   
   filtered_trade <- reactiveValues(
     map = trade_map,
+    na_indicator = FALSE,
     labels = trade_labels[["i_2020_USA"]],
     top = trade[trade$repcode == "USA",]
   )
@@ -437,6 +446,14 @@ server <- function(input, output, session) {
           trade_map[[selector]]
         } else {
           NA
+        }
+      }
+      
+      filtered_trade$na_indicator <- {
+        if (selector %in% colnames(trade_map)) {
+          FALSE
+        } else {
+          TRUE
         }
       }
       
@@ -564,7 +581,7 @@ server <- function(input, output, session) {
         labelOptions = labelOptions(
           style = list("font-weight" = "400", padding = "2em", width = "20em"),
           textsize = "0.8rem", direction = "auto", sticky = TRUE),
-        layerId = ~ISO3) 
+        layerId = ~iso3) 
     
   })
   
@@ -680,7 +697,7 @@ server <- function(input, output, session) {
         "No trade data found for ",
         selected_country()
       )
-    } else if (is.na(filtered_trade$map$trade)) {
+    } else if (filtered_trade$na_indicator) {
       paste0(
         "No trade data found for ",
         selected_country(),

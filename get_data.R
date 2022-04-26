@@ -13,8 +13,8 @@ if (!("ComtradeDatabaseDownloader" %in% rownames(installed.packages()))) {
 library(ComtradeDatabaseDownloader)
 library(dotenv)
 
-## Load local "api.env" if available store the Comtrade token here
-## Input "?get_comtrade" for details on what a Comtrade token is
+# Load local "api.env" if available store the Comtrade token here
+# Input "?get_comtrade" for details on Comtrade tokens
 
 if (file.exists("api.env")) {
   load_dot_env("api.env")
@@ -46,10 +46,3 @@ url_oxcgrt <- {
   "timeseries/stringency_index.csv?raw=true")
 }
 download.file(url = url_oxcgrt, "data/npi.csv")
-
-## Get spatial map data
-
-url_map <- "http://thematicmapping.org/downloads/TM_WORLD_BORDERS_SIMPL-0.3.zip"
-download.file(url = url_map , destfile = file.path(f, "world.zip"))
-unzip(file.path(f, "world.zip"), exdir = f)
-unlink(file.path(f, "world.zip"))

@@ -4,7 +4,8 @@
 ![GitHub release date](https://img.shields.io/github/release-date/andreas-andersen/NPITradeVisualiser)
 
 A shiny dashboard for visualising COVID-19 NPI stringency and changes in 
-global trade flows. Includes scripts for downloading, wrangling and deploying.
+global trade flows. Includes scripts for downloading, wrangling and deploying. 
+Deployed on [`shinyapps.io`](https://andreasandersen.shinyapps.io/NPITradeVisualiser/).
 
 ![Screenshot](img/illustration_screenshot.png?raw=true "Screenshot")
 
